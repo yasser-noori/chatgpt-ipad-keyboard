@@ -14,25 +14,26 @@ Import `chatgpt-ipad-enter.user.js` into your Safari userscript extension,
 enable it for `chatgpt.com`, and reload ChatGPT.
 
 Replace older copies rather than running multiple versions together.
-Version 2.0 shows a small green status panel at the bottom left.
+Version 2.1 runs without any on-page status panel. A Send-button selection
+saved by version 2.0 is reused automatically.
 
 If automatic Send-button detection fails:
 
 1. Type a draft so the Send arrow appears.
-2. Click **Choose Send** in the green panel.
-3. Click ChatGPT's Send arrow once. This click selects the button without
+2. Hold **Option + Shift** and click ChatGPT's Send arrow once.
+   This click selects the button without
    submitting the draft.
-4. Click back into your draft and press Enter.
+3. Click back into your draft and press Enter.
 
 The chosen button's identifying attributes are saved in your browser. If a
-layout change replaces an unlabeled button, use **Choose Send** again.
+layout change replaces an unlabeled button, select Send again with that shortcut.
 
 The script only runs on `chatgpt.com` and `chat.openai.com`. It does not
 make network requests or store your messages.
 
 ## Compatibility
 
-Version 2.0 does not require a specific message-box ID for Enter to send.
+Version 2.1 does not require a specific message-box ID for Enter to send.
 Command+Enter uses the focused textarea or contenteditable field.
 
 Verified in a local browser test with an unknown composer ID, a manually
