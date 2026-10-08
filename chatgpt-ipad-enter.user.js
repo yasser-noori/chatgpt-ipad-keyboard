@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT iPad: Enter sends, Command+Enter adds a line
 // @namespace    local.chatgpt.ipad.keyboard
-// @version      1.2.0
+// @version      1.3.0
 // @author       Yasser Noori
 // @description  Magic Keyboard shortcuts for the ChatGPT message composer in Safari.
 // @match        https://chatgpt.com/*
@@ -22,19 +22,32 @@
       badge.style.cssText = 'position:fixed;bottom:8px;left:8px;z-index:2147483647;background:#163724;color:white;padding:6px 10px;border-radius:6px;font:12px system-ui;pointer-events:none;';
       document.body.appendChild(badge);
     }
-    badge.textContent = 'Enter shortcuts v1.2: ' + message;
+    badge.textContent = 'Enter shortcuts v1.3: ' + message;
   }
   if (document.body) status('loaded');
   else document.addEventListener('DOMContentLoaded', () => status('loaded'), { once: true });
 
-  const editorFor = (target) => target instanceof Element
-    ? target.closest('#prompt-textarea, #mobile-composer-prompt') : null;
+  const sendSelector = 'button[data-testid="send-button"], button[aria-label="Send prompt"], button[aria-label="Send message"]';
+  function editorFor(target) {
+    if (!(target instanceof Element)) return null;
+    const known = target.closest('#prompt-textarea, #mobile-composer-prompt');
+    if (known) return known;
+    const editable = target.closest('textarea, [contenteditable="true"], [role="textbox"]');
+    if (!editable) return null;
+    // Composer IDs vary between ChatGPT layouts. Identify an editable box
+    // by its enclosing send controls, while leaving search fields alone.
+    for (let container = editable.parentElement; container && container !== document.body; container = container.parentElement) {
+      if (container.querySelector(sendSelector)) return editable;
+      if (container.tagName === 'MAIN') break;
+    }
+    return null;
+  }
   let newlineUntil = 0;
   let handledUntil = 0;
   let insertingLine = false;
 
   function sendMessage(editor) {
-    const selector = 'button[data-testid="send-button"], button[aria-label="Send prompt"], button[aria-label="Send message"]';
+    const selector = sendSelector;
     const scope = editor.closest('form') || editor.closest('main') || document;
     const send = [...scope.querySelectorAll(selector), ...document.querySelectorAll(selector)]
       .find(button => button.getClientRects().length && !button.disabled && button.getAttribute('aria-disabled') !== 'true');
