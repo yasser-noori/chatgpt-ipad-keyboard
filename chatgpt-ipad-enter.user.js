@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT iPad: Enter sends, Command+Enter adds a line
 // @namespace    local.chatgpt.ipad.keyboard
-// @version      1.1.0
+// @version      1.2.0
 // @author       Yasser Noori
 // @description  Magic Keyboard shortcuts for the ChatGPT message composer in Safari.
 // @match        https://chatgpt.com/*
@@ -13,6 +13,20 @@
 (() => {
   'use strict';
 
+  let badge;
+  function status(message) {
+    if (!document.body) return;
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'enter-shortcut-status';
+      badge.style.cssText = 'position:fixed;bottom:8px;left:8px;z-index:2147483647;background:#163724;color:white;padding:6px 10px;border-radius:6px;font:12px system-ui;pointer-events:none;';
+      document.body.appendChild(badge);
+    }
+    badge.textContent = 'Enter shortcuts v1.2: ' + message;
+  }
+  if (document.body) status('loaded');
+  else document.addEventListener('DOMContentLoaded', () => status('loaded'), { once: true });
+
   const editorFor = (target) => target instanceof Element
     ? target.closest('#prompt-textarea, #mobile-composer-prompt') : null;
   let newlineUntil = 0;
@@ -22,14 +36,21 @@
   function sendMessage(editor) {
     const selector = 'button[data-testid="send-button"], button[aria-label="Send prompt"], button[aria-label="Send message"]';
     const scope = editor.closest('form') || editor.closest('main') || document;
-    const send = scope.querySelector(selector) || document.querySelector(selector);
-    if (send && !send.disabled && send.getAttribute('aria-disabled') !== 'true') send.click();
+    const send = [...scope.querySelectorAll(selector), ...document.querySelectorAll(selector)]
+      .find(button => button.getClientRects().length && !button.disabled && button.getAttribute('aria-disabled') !== 'true');
+    if (send) {
+      status('Enter detected; clicked Send');
+      send.click();
+    } else status('Enter detected; no enabled Send button');
   }
 
   window.addEventListener('keydown', (event) => {
     if (event.key !== 'Enter' || event.isComposing) return;
     const editor = editorFor(event.target);
-    if (!editor) return;
+    if (!editor) {
+      status('Enter detected outside recognized composer');
+      return;
+    }
     if (event.ctrlKey || event.altKey) return;
     // Leave Shift+Enter available as the website's usual newline shortcut.
     if (event.shiftKey && !event.metaKey) {
@@ -43,6 +64,7 @@
     if (event.repeat) return;
 
     if (event.metaKey) {
+      status('Command+Enter detected');
       newlineUntil = Date.now() + 500;
       insertingLine = true;
       try {
